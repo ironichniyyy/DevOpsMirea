@@ -20,8 +20,8 @@ services:
     image: mysql:8.0
     container_name: db
     environment:
-      MYSQL_ROOT_PASSWORD: admin
-      MYSQL_DATABASE: zyulkov_project_db
+      MYSQL_ROOT_PASSWORD: example
+      MYSQL_DATABASE: test_db
     ports:
       - "3306:3306"
     networks:
