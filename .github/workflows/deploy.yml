@@ -1,0 +1,59 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      server:
+        description: 'Deploy server'
+        required: True
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest  # Use Ubuntu runner
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: Set up SSH key for accessing remote server
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          touch ~/.ssh/id_rsa
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          eval $(ssh-agent -s)
+          ssh-add ~/.ssh/id_rsa
+
+      # Step 3: Add server to known hosts (for security)
+      - name: Add SSH known hosts
+        run: ssh-keyscan -H ${{ github.event.inputs.server }} >> ~/.ssh/known_hosts
+      #Step 3.5 List of files
+      - name: Create app dir if necesarry
+        continue-on-error: true
+        run: |
+          ssh admin@${{ github.event.inputs.server }} << 'EOF'
+            mkdir /home/admin/app
+          EOF
+      - name: Setup docker
+        run: |
+            ssh admin@${{ github.event.inputs.server }} << 'EOF'
+             sudo snap install docker
+             sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+             sudo chmod +x /usr/local/bin/docker-compose
+            EOF
+
+      # Step 4: Copy application code to the server
+      - name: Copy files to remote server
+        run: |
+          scp -r ./* admin@${{ github.event.inputs.server }}:/home/admin/app
+
+      # Step 5: SSH into the server and run Docker Compose commands
+      - name: Deploy with Docker Compose
+        run: |
+          ssh admin@${{ github.event.inputs.server }} << 'EOF'
+            cd /home/admin/app
+            sudo docker-compose down
+            sudo docker-compose up -d 
+          EOF

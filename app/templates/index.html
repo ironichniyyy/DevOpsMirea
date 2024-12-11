@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Query Executor</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Исполнитель SQL запросов</a>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-md-12">
+                <h1 class="text-center">Исполнитель SQL запросов</h1>
+                <p class="text-center text-muted">Введите свой SQL запрос ниже</p>
+            </div>
+        </div>
+
+        <!-- SQL Query Form -->
+        <div class="row">
+            <div class="col-md-8 offset-md-2">
+                <form id="query-form" method="POST" action="/execute" class="card p-4 shadow-sm">
+                    <div class="mb-3">
+                        <label for="query" class="form-label">SQL запрос</label>
+                        <textarea class="form-control" id="query" name="query" rows="5" placeholder="Введите ваш SQL запрос здесь..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Выполнить запрос</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="row my-5">
+            <div class="col-md-8 offset-md-2">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Результат</h5>
+                    </div>
+                    <div class="card-body">
+                        <pre id="output" class="bg-light p-3 rounded" style="max-height: 400px; overflow-y: auto;">No results yet.</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-center text-white py-3">
+        <small>Made by Artem Zyulkov &copy; 2024</small>
+    </footer>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const form = document.getElementById("query-form");
+        const output = document.getElementById("output");
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+
+            // Show a loading message
+            output.textContent = "Запрос выполняется...";
+
+            try {
+                const response = await fetch("/execute", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    output.textContent = JSON.stringify(result, null, 2);
+                } else {
+                    output.textContent = `Error: ${result.message}`;
+                }
+            } catch (error) {
+                output.textContent = `Error: ${error.message}`;
+            }
+        };
+    </script>
+</body>
+</html>
+
